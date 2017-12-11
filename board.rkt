@@ -3,13 +3,14 @@
 (require 2htdp/image 2htdp/universe)
 (require lang/posn)
 
-(define n 3)
+(define n (random 10))
 (define size-cell 100)
 (define text-size (* size-cell 0.8))
 
 (define current-config (build-vector (* n n) add1))
-(vector-set*! current-config (- (* n n) 2) 0)
-(vector-set*! current-config (- (* n n) 1) 8)
+
+(define swap-config (build-vector (* n n) add1))
+(vector-set*! swap-config (- (* n n) 1) 0)
 
 (define final-config (build-vector (* n n) add1))
 (vector-set*! final-config (- (* n n) 1) 0)
@@ -79,7 +80,7 @@
 )
 
 (define (generate-start-config current-config)
-    (for ([i (in-range (random 80))])
+    (for ([i (in-range 1000)])
             (let 
                 ([x (random 4)])
                 (cond 
@@ -93,13 +94,11 @@
     current-config
 )
 
-(define new-config (generate-start-config final-config))
-
-new-config
-
+(vector-copy! current-config 0 (generate-start-config swap-config))
+current-config
 (big-bang 0 
     (name "N-PUZZLE")
     (on-key key-function)
     (to-draw draw-scene)
-    (stop-when game-over)
+    ;;; (stop-when game-over)
 )
