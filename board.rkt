@@ -3,7 +3,7 @@
 (require 2htdp/image 2htdp/universe)
 (require lang/posn)
 
-(define n 3)
+(define n 2)
 (define size-cell 100)
 (define text-size (* size-cell 0.5))
 
@@ -17,6 +17,12 @@
 
 (define end-game-message 
     (text "GG WP" text-size "red"))
+
+(define start-menu
+    (text "Entre com o tamanho do jogo: (ex 4)" (* text-size 0.4)"red"))
+
+(define start-layout
+    (empty-scene 400 500))
 
 (define cell
     (square size-cell "outline" "black"))
@@ -79,6 +85,10 @@
     ))
 )
 
+(define (draw-menu-scene w)
+    (place-image/align start-menu 200 50 "center" "center" start-layout)
+)
+
 (define (generate-start-config current-config)
     (for ([i (in-range 1000)])
             (let 
@@ -94,12 +104,26 @@
     current-config
 )
 
+;;; (define (get-entry w key)
+;;;     (cond
+;;;         [(key=? key "right") (move-right w current-config)]
+;;;         [(key=? key "left") (move-left w current-config)]
+;;;         [(key=? key "up") (move-up w current-config)]
+;;;         [(key=? key "down") (move-down w current-config)])
+;;;         [(number? key) ()]        
+;;; )
+
 (vector-copy! current-config 0 (generate-start-config swap-config))
 current-config
+
+;;; (big-bang 0
+;;;     (to-draw draw-menu-scene)
+;;;     (on-key get-entry)
+;;; )
 
 (big-bang 0 
     (name "N-PUZZLE")
     (on-key key-function)
     (to-draw draw-scene)
-    (stop-when game-over)
+    (stop-when game-over draw-scene)
 )
