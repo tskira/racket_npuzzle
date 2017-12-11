@@ -3,9 +3,9 @@
 (require 2htdp/image 2htdp/universe)
 (require lang/posn)
 
-(define n (random 10))
+(define n 3)
 (define size-cell 100)
-(define text-size (* size-cell 0.8))
+(define text-size (* size-cell 0.5))
 
 (define current-config (build-vector (* n n) add1))
 
@@ -96,9 +96,10 @@
 
 (vector-copy! current-config 0 (generate-start-config swap-config))
 current-config
+
 (big-bang 0 
     (name "N-PUZZLE")
     (on-key key-function)
     (to-draw draw-scene)
-    ;;; (stop-when game-over)
+    (stop-when game-over)
 )
