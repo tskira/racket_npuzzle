@@ -8,18 +8,22 @@
 (define text-size (* size-cell 0.8))
 
 (define current-config (build-vector (* n n) add1))
-(vector-set*! current-config (- (* n n) 1) 0)
-
-
+(vector-set*! current-config (- (* n n) 2) 0)
+(vector-set*! current-config (- (* n n) 1) 8)
 
 (define final-config (build-vector (* n n) add1))
 (vector-set*! final-config (- (* n n) 1) 0)
+
+(define end-game-message 
+    (text "GG WP" text-size "red"))
 
 (define cell
     (square size-cell "outline" "black"))
 
 (define (number-text an-number)
-    (text (number->string an-number) text-size "blue"))
+    (cond
+        [(= an-number 0) (text " " text-size "blue")]
+        [else (text (number->string an-number) text-size "blue")]))
 
 (define (size-of-game)
     (* (- n 1) (- n 1)))
@@ -50,28 +54,52 @@
 
 (define (key-function w key)
     (cond
-        [(key=? key "right") (move-left w current-config)]
-        [(key=? key "left") (move-right w current-config)]
-        [(key=? key "up") (move-down w current-config)]
-        [(key=? key "down") (move-up w current-config)]))
+        [(key=? key "right") (move-right w current-config)]
+        [(key=? key "left") (move-left w current-config)]
+        [(key=? key "up") (move-up w current-config)]
+        [(key=? key "down") (move-down w current-config)]))
 
-(define (game-over current-config)
-    (equal? current-config final-config))
+(define (game-over w)
+    (equal? current-config final-config)
+)
 
 (define (draw-scene w)
 (let
     ([cells-number (build-list  (* n n) (lambda (x) cell))]
     [current-config-text (build-list (* n n) (lambda (x) (number-text (vector-ref current-config x))))]
     [cells-position (build-list  (* n n) (lambda (x) (make-posn (+ (* (remainder x n) size-cell) (/ size-cell 2)) (+ (* (quotient x n) size-cell) (/ size-cell 2)))))])
-  (place-images
+  (cond
+  [(game-over w) (place-image end-game-message (/ (* n size-cell) 2) (/ (* n size-cell) 2) layout)]
+  [else (place-images
     (append cells-number current-config-text)
     (append cells-position cells-position)
     layout
+    )]
     ))
-  
 )
 
-(big-bang 0
+(define (generate-start-config current-config)
+    (for ([i (in-range (random 80))])
+            (let 
+                ([x (random 4)])
+                (cond 
+                    [(= x 0) (move-right 0 current-config)]
+                    [(= x 1) (move-left 0 current-config)]
+                    [(= x 2) (move-up 0 current-config)]
+                    [(= x 3) (move-down 0 current-config)]
+                )
+            )
+    )
+    current-config
+)
+
+(define new-config (generate-start-config final-config))
+
+new-config
+
+(big-bang 0 
+    (name "N-PUZZLE")
     (on-key key-function)
     (to-draw draw-scene)
+    (stop-when game-over)
 )
