@@ -75,7 +75,8 @@
             [(key=? key "right") (move-right w current-config)]
             [(key=? key "left") (move-left w current-config)]
             [(key=? key "up") (move-up w current-config)]
-            [(key=? key "down") (move-down w current-config)]))
+            [(key=? key "down") (move-down w current-config)])
+    )
 
     (define (game-over w)
         (equal? current-config final-config)
@@ -120,21 +121,24 @@
 
     (vector-copy! current-config 0 (generate-start-config swap-config))
 
-    
     (define (start-game)
         (set! n-moves 0)
         (big-bang 0
             (name "N-PUZZLE")
             (on-key key-function)
             (to-draw draw-scene)
-            (stop-when game-over draw-scene)
+            ;;; (stop-when game-over draw-scene)
         )
         (display n-moves)
+        n-moves
     )
     (print player)
     (start-game)
+    (start-new-game)
+
 )
 
+( define (start-new-game)
 (define entry-menu (instantiate dialog% ("N-PUZZLE")))
  
 (define n-size (new text-field% [parent entry-menu] [label "Tamanho"]))
@@ -146,4 +150,10 @@
 (new button% [parent panel] [label "Proximo"]
     [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value)))])
 
+(new button% [parent panel] [label "fim"]
+    [callback (lambda (button event)  (send entry-menu show #f) )])
+
 (send entry-menu show #t)
+)
+
+(start-new-game)
