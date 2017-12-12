@@ -1,1 +1,1 @@
-(((#(struct:player-ranking 1 "kira") . #(struct:player-ranking 1 "chero")) . #(struct:player-ranking 5 "kira")) . #(struct:player-ranking 176 "chero"))
+("1 a")("2 q")("10 o")("7 ta")("4 r")

@@ -5,11 +5,11 @@
 (require racket/gui)
 (require lang/posn)
 
+(struct player-ranking (points name) #:transparent)
+
 (define (play n player)
 
-    (define n-moves 0)
-    
-    (struct player-ranking (points name) #:transparent)
+    (define n-moves 0)    
 
     (define size-cell 100)
 
@@ -140,13 +140,17 @@
             (to-draw draw-scene)
             ;;; (stop-when game-over draw-scene)
         )
-        (define in (open-input-file "ranking.txt"))
-        (define l1 (file->list "ranking.txt"))
-        (close-input-port in)
-        (define out (open-output-file "ranking.txt" #:mode 'text #:exists 'update))
-        (define score-player (player-ranking n-moves player))
-        (define l2 (list (append l1 score-player)))
-        (map (lambda (x) (write x out)) (sort l2 < #:key player-ranking-points))
+        ;;; (define in (open-input-file "ranking.txt"))
+        ;;; (define l1 (file->list "ranking.txt"))
+        ;;; (define l2 (list (map (lambda (x) (define aux (string-split x)) (define j (player-ranking (list-ref aux 0) (list-ref aux 1))) j)  l1)))
+        ;;; (close-input-port in)
+        (define out (open-output-file "ranking.txt" #:mode 'text #:exists 'append))
+        ;;; (define score-player (player-ranking n-moves player))
+        ;;; (write score-player out)
+        ;;; (map (lambda (x) 
+        ;;;     ((write (string-append (number->string (player-ranking-points x)) " " (player-ranking-name x) ) out))
+        ;;; ) l2)
+        (write (list (string-append (number->string n-moves) " " player )) out)
         (close-output-port out)
     )
     (start-game)
@@ -154,22 +158,35 @@
 
 )
 
-( define (start-new-game)
-(define entry-menu (instantiate dialog% ("N-PUZZLE")))
- 
-(define n-size (new text-field% [parent entry-menu] [label "Tamanho"]))
-(define player-name (new text-field% [parent entry-menu] [label "Jogador"]))
+(define (start-new-game)
+    (define entry-menu (instantiate dialog% ("N-PUZZLE")))
+    
+    (define n-size (new text-field% [parent entry-menu] [label "Tamanho"]))
+    (define player-name (new text-field% [parent entry-menu] [label "Jogador"]))
 
-(define panel (new horizontal-panel% [parent entry-menu]
-                                     [alignment '(center center)]))
- 
-(new button% [parent panel] [label "Proximo"]
-    [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value)))])
+    (define panel (new horizontal-panel% [parent entry-menu]
+                                        [alignment '(center center)]))
+    
+    (new button% [parent panel] [label "Proximo"]
+        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value)))])
 
-(new button% [parent panel] [label "fim"]
-    [callback (lambda (button event)  (send entry-menu show #f) )])
+    (new button% [parent panel] [label "fim"]
+        [callback (lambda (button event)  (send entry-menu show #f) )])
 
-(send entry-menu show #t)
+    (define (get-ranking)
+        (let
+            ([l1(file->list "ranking.txt")])
+            (define l2 (build-list (length l1) (lambda (x) 
+                ;;; (print(list-ref (list-ref l1 x) 0))
+                (define aux (string-split (list-ref (list-ref l1 x) 0)) )
+                (player-ranking (string->number (list-ref aux 0)) (list-ref aux 1) )
+            )))
+            (print(sort l2 < #:key player-ranking-points))
+        )
+    )
+
+    (send entry-menu show #t)
+    (get-ranking)
 )
 
 (start-new-game)
