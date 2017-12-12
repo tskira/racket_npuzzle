@@ -8,8 +8,10 @@
 (define (play n player)
 
     (define n-moves 0)
+    
+    (struct player-ranking (points name) #:transparent)
 
-    (define size-cell 50)
+    (define size-cell 100)
 
     (define text-size (* size-cell 0.5))
 
@@ -27,6 +29,9 @@
     (define start-menu
         (htdp:text "Entre com o tamanho do jogo: (ex 4)" (* text-size 0.4)"red"))
 
+    (define print-player-name
+        (htdp:text player (* text-size 0.4) "green"))
+
     (define start-layout
         (htdp:empty-scene 400 500))
 
@@ -42,7 +47,7 @@
         (* (- n 1) (- n 1)))
 
     (define layout
-        (htdp:empty-scene (* n size-cell) (* n size-cell) ))
+        (htdp:empty-scene (+ (* n size-cell) 100) (* n size-cell) ))
 
     (define (check-move current-position movement config)
         (and (< (+ current-position movement) (vector-length config))
@@ -84,14 +89,20 @@
 
     (define (draw-scene w)
     (let
-        ([cells-number (build-list  (* n n) (lambda (x) cell))]
+        (
+        [cells-number (build-list  (* n n) (lambda (x) cell))]
         [current-config-text (build-list (* n n) (lambda (x) (number-text (vector-ref current-config x))))]
-        [cells-position (build-list  (* n n) (lambda (x) (make-posn (+ (* (remainder x n) size-cell) (/ size-cell 2)) (+ (* (quotient x n) size-cell) (/ size-cell 2)))))])
+        [cells-position (build-list  (* n n) (lambda (x) (make-posn (+ (* (remainder x n) size-cell) (/ size-cell 2)) (+ (* (quotient x n) size-cell) (/ size-cell 2)))))]
+        [player-list (list print-player-name)]
+        [player-position (list  (make-posn (+ (* n size-cell) 50) (* size-cell 0.5)))]
+        [score-list (list (number-text n-moves))]
+        [score-position (list (make-posn (+ (* n size-cell) 50) (+ (* size-cell 0.5) 100)))]
+        )
     (cond
     [(game-over w) (htdp:place-image end-game-message (/ (* n size-cell) 2) (/ (* n size-cell) 2) layout)]
     [else (htdp:place-images
-        (append cells-number current-config-text)
-        (append cells-position cells-position)
+        (append cells-number current-config-text player-list score-list)
+        (append cells-position cells-position player-position score-position)
         layout
         )]
         ))
@@ -100,7 +111,7 @@
     (define (draw-menu-scene w)
         (htdp:place-image/align start-menu 200 50 "center" "center" start-layout)
         (cond
-            [(game-over w) (sleep 3)]
+            [(game-over w)]
         )
     )
 
@@ -129,10 +140,15 @@
             (to-draw draw-scene)
             ;;; (stop-when game-over draw-scene)
         )
-        (display n-moves)
-        n-moves
+        (define in (open-input-file "ranking.txt"))
+        (define l1 (file->list "ranking.txt"))
+        (close-input-port in)
+        (define out (open-output-file "ranking.txt" #:mode 'text #:exists 'update))
+        (define score-player (player-ranking n-moves player))
+        (define l2 (list (append l1 score-player)))
+        (map (lambda (x) (write x out)) (sort l2 < #:key player-ranking-points))
+        (close-output-port out)
     )
-    (print player)
     (start-game)
     (start-new-game)
 
