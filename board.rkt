@@ -193,34 +193,34 @@
 
 
     (define ranking1 (new message% [parent ranking-panel]
-                          [label (string-append "1. " (get-ranking 0) )]))
+                          [label (string-append "(1). " (get-ranking 0) )]))
 
     (define ranking2 (new message% [parent ranking-panel]
-                          [label (string-append "2. " (get-ranking 1) )]))
+                          [label (string-append "(2). " (get-ranking 1) )]))
 
     (define ranking3 (new message% [parent ranking-panel]
-                          [label (string-append "3. " (get-ranking 2) )]))
+                          [label (string-append "(3). " (get-ranking 2) )]))
 
     (define ranking4 (new message% [parent ranking-panel]
-                          [label (string-append "4. " (get-ranking 3) )]))                                                                            
+                          [label (string-append "(4). " (get-ranking 3) )]))                                                                            
 
     (define ranking5 (new message% [parent ranking-panel]
-                          [label (string-append "5. " (get-ranking 4) )]))
+                          [label (string-append "(5). " (get-ranking 4) )]))
 
     (define ranking6 (new message% [parent ranking-panel]
-                          [label (string-append "6. " (get-ranking 5) )]))
+                          [label (string-append "(6). " (get-ranking 5) )]))
 
     (define ranking7 (new message% [parent ranking-panel]
-                          [label (string-append "7. " (get-ranking 6) )]))
+                          [label (string-append "(7). " (get-ranking 6) )]))
 
     (define ranking8 (new message% [parent ranking-panel]
-                          [label (string-append "8. " (get-ranking 7) )]))
+                          [label (string-append "(8). " (get-ranking 7) )]))
 
     (define ranking9 (new message% [parent ranking-panel]
-                          [label (string-append "9. " (get-ranking 8) )]))          
+                          [label (string-append "(9). " (get-ranking 8) )]))          
 
     (define ranking10 (new message% [parent ranking-panel]
-                          [label (string-append "10. " (get-ranking 9) )]))                                                                                                                                                  
+                          [label (string-append "(10). " (get-ranking 9) )]))                                                                                                                                                  
 
 
     (send entry-menu show #t)
