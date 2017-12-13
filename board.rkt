@@ -140,53 +140,91 @@
             (to-draw draw-scene)
             ;;; (stop-when game-over draw-scene)
         )
-        ;;; (define in (open-input-file "ranking.txt"))
-        ;;; (define l1 (file->list "ranking.txt"))
-        ;;; (define l2 (list (map (lambda (x) (define aux (string-split x)) (define j (player-ranking (list-ref aux 0) (list-ref aux 1))) j)  l1)))
-        ;;; (close-input-port in)
         (define out (open-output-file "ranking.txt" #:mode 'text #:exists 'append))
-        ;;; (define score-player (player-ranking n-moves player))
-        ;;; (write score-player out)
-        ;;; (map (lambda (x) 
-        ;;;     ((write (string-append (number->string (player-ranking-points x)) " " (player-ranking-name x) ) out))
-        ;;; ) l2)
         (write (list (string-append (number->string n-moves) " " player )) out)
         (close-output-port out)
     )
+
     (start-game)
     (start-new-game)
 
 )
 
 (define (start-new-game)
+
+    (define (get-ranking pos)
+        (let
+            ([l1(file->list "ranking.txt")])
+            (define l2 (build-list (length l1) (lambda (x) 
+                (define aux (string-split (list-ref (list-ref l1 x) 0)) )
+                (player-ranking (string->number (list-ref aux 0)) (list-ref aux 1) )
+            )))
+            (cond
+            [(< pos (length l1))
+            (string-append (number->string (player-ranking-points (list-ref (sort l2 < #:key player-ranking-points) pos))) " " (player-ranking-name (list-ref (sort l2 < #:key player-ranking-points) pos)))]
+            [else (string-append " " " ")]
+            
+            )
+        )
+    )
+
     (define entry-menu (instantiate dialog% ("N-PUZZLE")))
+    (define ranking-menu (instantiate dialog% ("RANKING")))
     
     (define n-size (new text-field% [parent entry-menu] [label "Tamanho"]))
+
     (define player-name (new text-field% [parent entry-menu] [label "Jogador"]))
 
     (define panel (new horizontal-panel% [parent entry-menu]
                                         [alignment '(center center)]))
+
+    (define ranking-panel (new horizontal-panel% [parent ranking-menu]
+                                            [alignment '(center center)]))                                        
     
     (new button% [parent panel] [label "Proximo"]
         [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value)))])
+    
 
-    (new button% [parent panel] [label "fim"]
+    (new button% [parent panel] [label "Sair"]
         [callback (lambda (button event)  (send entry-menu show #f) )])
 
-    (define (get-ranking)
-        (let
-            ([l1(file->list "ranking.txt")])
-            (define l2 (build-list (length l1) (lambda (x) 
-                ;;; (print(list-ref (list-ref l1 x) 0))
-                (define aux (string-split (list-ref (list-ref l1 x) 0)) )
-                (player-ranking (string->number (list-ref aux 0)) (list-ref aux 1) )
-            )))
-            (print(sort l2 < #:key player-ranking-points))
-        )
-    )
+    (new button% [parent panel] [label "Ranking"]
+        [callback (lambda (button event)  (send ranking-menu show #t) )])
+
+
+    (define ranking1 (new message% [parent ranking-panel]
+                          [label (string-append "1. " (get-ranking 0) )]))
+
+    (define ranking2 (new message% [parent ranking-panel]
+                          [label (string-append "2. " (get-ranking 1) )]))
+
+    (define ranking3 (new message% [parent ranking-panel]
+                          [label (string-append "3. " (get-ranking 2) )]))
+
+    (define ranking4 (new message% [parent ranking-panel]
+                          [label (string-append "4. " (get-ranking 3) )]))                                                                            
+
+    (define ranking5 (new message% [parent ranking-panel]
+                          [label (string-append "5. " (get-ranking 4) )]))
+
+    (define ranking6 (new message% [parent ranking-panel]
+                          [label (string-append "6. " (get-ranking 5) )]))
+
+    (define ranking7 (new message% [parent ranking-panel]
+                          [label (string-append "7. " (get-ranking 6) )]))
+
+    (define ranking8 (new message% [parent ranking-panel]
+                          [label (string-append "8. " (get-ranking 7) )]))
+
+    (define ranking9 (new message% [parent ranking-panel]
+                          [label (string-append "9. " (get-ranking 8) )]))          
+
+    (define ranking10 (new message% [parent ranking-panel]
+                          [label (string-append "10. " (get-ranking 9) )]))                                                                                                                                                  
+
 
     (send entry-menu show #t)
-    (get-ranking)
+    
 )
 
 (start-new-game)
