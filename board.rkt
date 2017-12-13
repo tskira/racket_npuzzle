@@ -145,6 +145,17 @@
         (close-output-port out)
     )
 
+    (define (h1 config)
+        (let
+            ([resp 0])
+            (for ([i  (in-range n*n)])
+                (display i)
+            )
+        )
+    )
+    (define (a-star)
+
+    )
     (start-game)
     (start-new-game)
 
