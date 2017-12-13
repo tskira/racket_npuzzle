@@ -8,9 +8,9 @@
 
 (struct player-ranking (points name) #:transparent)
 
-(define (play n player ia-mode)
+(define (play n player ia-mode ia-mode2)
 
-    (struct node-star (f g conf movlist))
+    (struct node-star (f g conf movlist) #:transparent)
 
     (define (node<=? x y)
         (<= (node-star-f x) (node-star-f y)))
@@ -51,6 +51,65 @@
     (define (size-of-game)
         (* (- n 1) (- n 1)))
 
+    (define a-star-path (list))
+
+  (define (h1 config)
+        (let
+            ([resp 0])
+            (for ([i  (in-range (* n n))])
+                (cond
+                [(not (= (vector-ref config i) 0))
+                    (cond
+                        [(not (= (vector-ref config i) (+ i 1))) (set! resp (add1 resp))]
+                    )]
+                )
+            )
+            resp
+        )
+    )
+    (define (a-star current-config)
+        (define interno (make-vector (* n n) 0))
+        (vector-copy! interno 0 current-config)
+        (define open (make-heap node<=?))
+        (define closed (make-immutable-hash))
+        (heap-add! open (node-star (h1 current-config) 0 interno (list -1)))
+        (define (loop)
+            (cond 
+                [(empty? open) (error "fail")]
+                [else
+                    (define x (heap-min open))
+                    (define aux (make-vector (* n n) 0))
+                    (define cr (make-vector (* n n) 0))
+                    (define cl (make-vector (* n n) 0))
+                    (define cu (make-vector (* n n) 0))
+                    (define cd (make-vector (* n n) 0))
+                    (vector-copy! aux 0 (node-star-conf x))
+                    (vector-copy! cr 0 (move-right 0 aux))
+                    (vector-copy! aux 0 (node-star-conf x))
+                    (vector-copy! cl 0 (move-left 0 aux))
+                    (vector-copy! aux 0 (node-star-conf x))
+                    (vector-copy! cu 0 (move-up 0 aux))
+                    (vector-copy! aux 0 (node-star-conf x))
+                    (vector-copy! cd 0 (move-down 0 aux))       
+                    (heap-remove-min! open)
+                    (cond
+                        ((finished (node-star-conf x))x)
+                        (else 
+                            (hash-set closed (node-star-conf x) x)
+                            (if (hash-has-key? closed cr) (error) (heap-add! open (node-star (+(+(h1 cr) 1) (node-star-g x)) (+ (node-star-g x) 1) cr (append (node-star-movlist x) (list 0) )   )))
+                            (if (hash-has-key? closed cl) (error) (heap-add! open (node-star (+(+(h1 cl) 1) (node-star-g x)) (+ (node-star-g x) 1) cl (append (node-star-movlist x) (list 1) )   )))
+                            (if (hash-has-key? closed cu) (error) (heap-add! open (node-star (+(+(h1 cu) 1) (node-star-g x)) (+ (node-star-g x) 1) cu (append (node-star-movlist x) (list 2) )   )))
+                            (if (hash-has-key? closed cd) (error) (heap-add! open (node-star (+(+(h1 cd) 1) (node-star-g x)) (+ (node-star-g x) 1) cd (append (node-star-movlist x) (list 3) )   )))
+                            (loop)
+                        )
+                    )
+                ]
+            )
+        )
+        (node-star-movlist (loop))
+    )
+
+
     (define layout
         (htdp:empty-scene (+ (* n size-cell) 100) (* n size-cell) ))
 
@@ -73,7 +132,7 @@
                     (increment!)
                  ) 
             ]
-            )))
+            )current-config))
 
     (define move-right (move -1))
     (define move-left (move 1))
@@ -101,6 +160,17 @@
         )
     )
 
+  (define (key-function-ia2 w)
+        (define x (list-ref a-star-path (+ n-moves 1)))
+        (cond
+            [(game-over w) w]
+            [(= x 0) (move-right w current-config)]
+            [(= x 1) (move-left w current-config)]
+            [(= x 2) (move-up w current-config)]
+            [(= x 3) (move-down w current-config)])
+
+    )
+
     (define (game-over w)
         (equal? current-config final-config)
     )
@@ -117,6 +187,7 @@
         [score-position (list (make-posn (+ (* n size-cell) 50) (+ (* size-cell 0.5) 100)))]
         )
         (if ia-mode (sleep 0.5) (sleep 0))
+        (if ia-mode2 (sleep 0.5) (sleep 0))
     (cond
     [(game-over w) (htdp:place-image end-game-message (/ (* n size-cell) 2) (/ (* n size-cell) 2) layout)]
     [else (htdp:place-images
@@ -169,20 +240,6 @@
         (close-output-port out)
     )
 
-    (define (h1 config)
-        (let
-            ([resp 0])
-            (for ([i  (in-range (* n n))])
-                (cond
-                [(not (= (vector-ref config i) 0))
-                    (cond
-                        [(= (vector-ref config i) (+ i 1)) (set! resp (add1 resp))]
-                    )]
-                )
-            )
-            resp
-        )
-    )
 
     (define (start-game-ia)
         (set! n-moves 0)
@@ -192,12 +249,29 @@
             (to-draw draw-scene)
             ;;; (stop-when game-over draw-scene)
         )
-        (define out (open-output-file "ranking.txt" #:mode 'text #:exists 'append))
-        (write (list (string-append (number->string n-moves) " " player )) out)
-        (close-output-port out)
+        ;;; (define out (open-output-file "ranking.txt" #:mode 'text #:exists 'append))
+        ;;; (write (list (string-append (number->string n-moves) " " player )) out)
+        ;;; (close-output-port out)
     )
 
-    (if ia-mode (start-game-ia) (start-game))
+
+    (define (start-game-ia2)
+        (set! a-star-path (append a-star-path (a-star current-config) (list 0)))
+        (display a-star-path)
+        (set! n-moves 0)
+        (big-bang 0
+            (name "N-PUZZLE")
+            (on-tick key-function-ia2)
+            (to-draw draw-scene)
+            ;;; (stop-when game-over draw-scene)
+        )
+        ;;; (define out (open-output-file "ranking.txt" #:mode 'text #:exists 'append))
+        ;;; (write (list (string-append (number->string n-moves) " " player )) out)
+        ;;; (close-output-port out)
+    )
+
+
+    (if ia-mode (start-game-ia) (if ia-mode2 (start-game-ia2) (start-game)))
     (start-new-game)
 )
 
@@ -233,10 +307,13 @@
                                             [alignment '(center center)]))                                        
     
     (new button% [parent panel] [label "Proximo"]
-        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value) #f))])
+        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value) #f #f ))])
     
     (new button% [parent panel] [label "IA - MODE"]
-        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value) #t))])
+        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value) #t #f))])
+
+    (new button% [parent panel] [label "IA - MODE2"]
+        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value) #f #t ))])
 
     (new button% [parent panel] [label "Sair"]
         [callback (lambda (button event)  (send entry-menu show #f) )])
