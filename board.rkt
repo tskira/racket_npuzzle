@@ -4,11 +4,16 @@
 (require (prefix-in htdp: 2htdp/image))
 (require racket/gui)
 (require lang/posn)
+(require data/heap)
 
 (struct player-ranking (points name) #:transparent)
 
-(define (play n player)
+(define (play n player ia-mode)
 
+    (struct node-star (f g conf movlist))
+
+    (define (node<=? x y)
+        (<= (node-star-f x) (node-star-f y)))
     (define n-moves 0)    
 
     (define size-cell 100)
@@ -83,6 +88,19 @@
             [(key=? key "down") (move-down w current-config)])
     )
 
+
+    (define (key-function-ia w)
+        (let
+            ([x (random 4)])
+        (cond
+            [(game-over w) w]
+            [(= x 0) (move-right w current-config)]
+            [(= x 1) (move-left w current-config)]
+            [(= x 2) (move-up w current-config)]
+            [(= x 3) (move-down w current-config)])
+        )
+    )
+
     (define (game-over w)
         (equal? current-config final-config)
     )
@@ -98,6 +116,7 @@
         [score-list (list (number-text n-moves))]
         [score-position (list (make-posn (+ (* n size-cell) 50) (+ (* size-cell 0.5) 100)))]
         )
+        (if ia-mode (sleep 0.5) (sleep 0))
     (cond
     [(game-over w) (htdp:place-image end-game-message (/ (* n size-cell) 2) (/ (* n size-cell) 2) layout)]
     [else (htdp:place-images
@@ -119,7 +138,7 @@
         (for ([i (in-range (* n 300))])
                 (let 
                     ([x (random 4)])
-                    (cond 
+                        (cond 
                         [(= x 0) (move-right 0 current-config)]
                         [(= x 1) (move-left 0 current-config)]
                         [(= x 2) (move-up 0 current-config)]
@@ -131,6 +150,11 @@
     )
 
     (vector-copy! current-config 0 (generate-start-config swap-config))
+
+    (define (finished config)
+        (equal? config final-config)
+    )
+
 
     (define (start-game)
         (set! n-moves 0)
@@ -148,17 +172,33 @@
     (define (h1 config)
         (let
             ([resp 0])
-            (for ([i  (in-range n*n)])
-                (display i)
+            (for ([i  (in-range (* n n))])
+                (cond
+                [(not (= (vector-ref config i) 0))
+                    (cond
+                        [(= (vector-ref config i) (+ i 1)) (set! resp (add1 resp))]
+                    )]
+                )
             )
+            resp
         )
     )
-    (define (a-star)
 
+    (define (start-game-ia)
+        (set! n-moves 0)
+        (big-bang 0
+            (name "N-PUZZLE")
+            (on-tick key-function-ia)
+            (to-draw draw-scene)
+            ;;; (stop-when game-over draw-scene)
+        )
+        (define out (open-output-file "ranking.txt" #:mode 'text #:exists 'append))
+        (write (list (string-append (number->string n-moves) " " player )) out)
+        (close-output-port out)
     )
-    (start-game)
-    (start-new-game)
 
+    (if ia-mode (start-game-ia) (start-game))
+    (start-new-game)
 )
 
 (define (start-new-game)
@@ -193,8 +233,10 @@
                                             [alignment '(center center)]))                                        
     
     (new button% [parent panel] [label "Proximo"]
-        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value)))])
+        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value) #f))])
     
+    (new button% [parent panel] [label "IA - MODE"]
+        [callback (lambda (button event)  (send entry-menu show #f) (play (string->number (send n-size get-value)) (send player-name get-value) #t))])
 
     (new button% [parent panel] [label "Sair"]
         [callback (lambda (button event)  (send entry-menu show #f) )])
@@ -232,7 +274,6 @@
 
     (define ranking10 (new message% [parent ranking-panel]
                           [label (string-append "(10). " (get-ranking 9) )]))                                                                                                                                                  
-
 
     (send entry-menu show #t)
     
